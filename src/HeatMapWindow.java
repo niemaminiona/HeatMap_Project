@@ -4,13 +4,14 @@ import java.awt.*;
 public class HeatMapWindow extends JFrame {
     public HeatMapWindow(){
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        HeatMapGraphicPanel heatMapPanel = new HeatMapGraphicPanel(20, 50);
+        HeatMapGraphicPanel heatMapPanel = new HeatMapGraphicPanel(200, 5);
 
         this.add(heatMapPanel);
         this.pack();
         this.setLocationRelativeTo(null);
         this.setVisible(true);
         this.setResizable(false);
+        this.setTitle("Heat distribution");
 
         new SettingsWindow(heatMapPanel);
     }
@@ -21,8 +22,9 @@ class HeatMapGraphicPanel extends JPanel{
     /// variables ///
     public int mapSize;
     public int plotSize;
-    public int diversity;
-    public int activeThreshold = 3;
+    public int diversity = 16;
+    public int activeThreshold = 7;
+    public boolean drawOutLine = false;
     private HeatCell[][] mainHeatCellsMap;
 
     /// Constructors ///
@@ -38,8 +40,10 @@ class HeatMapGraphicPanel extends JPanel{
     public HeatMapGraphicPanel(int mapSize, int plotSize){
         this.mapSize = mapSize;
         this.plotSize = plotSize;
-        this.diversity = 16;
         mainHeatCellsMap = returnRandomHeatMap(mapSize);
+
+        countHeatMapByNeighbours(2);
+        countHeatMap(4);
 
         this.setPreferredSize(new Dimension(mapSize * plotSize, mapSize * plotSize));
     }
@@ -61,12 +65,12 @@ class HeatMapGraphicPanel extends JPanel{
                 g2.setColor(new Color(red, green, blue));
 
                 g2.fillRect(y * plotSize, x * plotSize, plotSize, plotSize);
-                g2.setColor(Color.black);
-                g2.drawRect(y * plotSize, x * plotSize, plotSize, plotSize);
+                if (drawOutLine){
+                    g2.setColor(Color.black);
+                    g2.drawRect(y * plotSize, x * plotSize, plotSize, plotSize);
+                }
             }
         }
-
-        writeTable(mainHeatCellsMap);
     }
 
     /// Heat map manipulation methods ///
@@ -86,12 +90,11 @@ class HeatMapGraphicPanel extends JPanel{
     //function that randomizes mainHeatMap
     public void randomizeHeatMap() {
         mainHeatCellsMap = returnRandomHeatMap(mapSize);
-
         repaint();
     }
 
 
-    // method that returns map with counted neighbours
+    // method that returns averaged map
     private HeatCell[][] returnCountedValues(HeatCell[][] heatMap) {
         int size = heatMap.length;
         HeatCell[][] updatedHeatMap = new HeatCell[size][size];
@@ -117,21 +120,68 @@ class HeatMapGraphicPanel extends JPanel{
                         }
                     }
                 }
-
                 updatedHeatMap[y][x] = new HeatCell(count / neighbours.length);
             }
         }
         return updatedHeatMap;
     }
 
-
     //function that randomizes mainHeatMap
-    public void countHeatMap() {
-        mainHeatCellsMap = returnCountedValues(mainHeatCellsMap);
-
+    public void countHeatMap(){
+        countHeatMap(1);
+    }
+    public void countHeatMap(int amount) {
+        for(int i = 0; i < amount; i++){
+            mainHeatCellsMap = returnCountedValues(mainHeatCellsMap);
+        }
         repaint();
     }
 
+    // method that returns map with counted neighbours
+    private HeatCell[][] returnCountedByNeighbours(HeatCell[][] heatMap) {
+        int size = heatMap.length;
+        HeatCell[][] updatedHeatMap = new HeatCell[size][size];
+
+        final Point[] neighbours = {
+                new Point(-1, -1), new Point(0, -1), new Point(1, -1),
+                new Point(-1,  0),                         new Point(1,  0),
+                new Point(-1,  1), new Point(0,  1), new Point(1,  1)
+        };
+
+        for (int y = 0; y < size; y++) {
+            for (int x = 0; x < size; x++) {
+
+                float count = 0;
+                float ratio = (float)diversity / neighbours.length;
+
+                for (Point p : neighbours) {
+                    int ny = y + p.y;
+                    int nx = x + p.x;
+
+                    if (ny >= 0 && ny < size && nx >= 0 && nx < size) {
+                        if (heatMap[ny][nx].value >= activeThreshold) {
+                            count += ratio;
+                        }
+                    }
+                }
+                updatedHeatMap[y][x] = new HeatCell(Math.round(count));
+            }
+        }
+        return updatedHeatMap;
+    }
+
+    //function that randomizes mainHeatMap
+    public void countHeatMapByNeighbours(){
+        countHeatMapByNeighbours(1);
+    }
+    public void countHeatMapByNeighbours(int amount) {
+        for(int i = 0; i < amount; i++){
+            mainHeatCellsMap = returnCountedByNeighbours(mainHeatCellsMap);
+        }
+        repaint();
+    }
+
+    // method that out writes map
     private void writeTable(HeatCell[][] map) {
         System.out.println("===========================================");
         System.out.println();
@@ -162,41 +212,61 @@ class HeatCell {
 // class of window for settings
 class SettingsWindow extends JFrame {
     public SettingsWindow(HeatMapGraphicPanel heatMapPanel){
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        JPanel mainPanel = new JPanel(new GridLayout(2, 3));
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS)); // vertical stacking for sections
 
-        // part with buttons
+        // --- Buttons row ---
         JButton randomizeButton = new JButton("Randomize");
-        randomizeButton.setPreferredSize(new Dimension(200,100));
-        randomizeButton.addActionListener(_ ->heatMapPanel.randomizeHeatMap());
-
+        randomizeButton.addActionListener(_ -> heatMapPanel.randomizeHeatMap());
         JButton countButton = new JButton("Count");
-        countButton.setPreferredSize(new Dimension(200,100));
         countButton.addActionListener(_ -> heatMapPanel.countHeatMap());
+        JButton countNeighboursButton = new JButton("Count by neighbours");
+        countNeighboursButton.addActionListener(_ -> heatMapPanel.countHeatMapByNeighbours());
 
-        mainPanel.add(randomizeButton);
-        mainPanel.add(countButton);
+        // fixed size
+        Dimension buttonSize = new Dimension(180, 70);
+        randomizeButton.setPreferredSize(buttonSize);
+        countButton.setPreferredSize(buttonSize);
+        countNeighboursButton.setPreferredSize(buttonSize);
 
-        //bottom part
-        JLabel sliderValueLabel = new JLabel();
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        buttonPanel.add(randomizeButton);
+        buttonPanel.add(countButton);
+        buttonPanel.add(countNeighboursButton);
 
-        JSlider thresholdSlider = new JSlider();
-        thresholdSlider.setMaximum(heatMapPanel.diversity - 1);
-        thresholdSlider.setMinimum(1);
-        thresholdSlider.setValue(heatMapPanel.activeThreshold);
+        // --- Slider row ---
+        JPanel sliderPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JLabel sliderValueLabel = new JLabel("Threshold value: " + heatMapPanel.activeThreshold);
+        JSlider thresholdSlider = new JSlider(1, heatMapPanel.diversity - 1, heatMapPanel.activeThreshold);
         thresholdSlider.addChangeListener(_ -> {
             heatMapPanel.activeThreshold = thresholdSlider.getValue();
             sliderValueLabel.setText("Value: " + thresholdSlider.getValue());
         });
-        sliderValueLabel.setText("Value: " + thresholdSlider.getValue());
+        sliderPanel.add(sliderValueLabel);
+        sliderPanel.add(thresholdSlider);
 
-        mainPanel.add(sliderValueLabel);
-        mainPanel.add(thresholdSlider);
+        // --- Check row ---
+        JPanel checkPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JCheckBox drawOutLineCheckBox = new JCheckBox();
+        drawOutLineCheckBox.setSelected(heatMapPanel.drawOutLine);
+        drawOutLineCheckBox.addActionListener(_ -> {
+            heatMapPanel.drawOutLine = drawOutLineCheckBox.isSelected();
+            heatMapPanel.repaint();
+        });
+        checkPanel.add(new JLabel("Draw grid outline: "));
+        checkPanel.add(drawOutLineCheckBox);
 
-        // finally adds main panel to window
+
+        mainPanel.add(buttonPanel);
+        mainPanel.add(sliderPanel);
+        mainPanel.add(checkPanel);
+
         this.add(mainPanel);
         this.pack();
+        this.setTitle("Settings");
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setLocationRelativeTo(null);
         this.setVisible(true);
     }
 }
+
