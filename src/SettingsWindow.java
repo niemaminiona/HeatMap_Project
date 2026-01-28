@@ -1,39 +1,24 @@
 import javax.swing.*;
-import java.awt.*;
 
 public class SettingsWindow extends JFrame {
     public SettingsWindow(HeatMapGraphicPanel heatMapPanel){
-        JPanel mainPanel = new JPanel();
-
-        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS)); // vertical stacking for sections
+        JPanel mainPanel = new Templates.HorizontalStackPanel();
 
         // --- Buttons row ---
-        JButton randomizeButton = new JButton("Randomize");
-        randomizeButton.addActionListener(_ ->
-        {
-            heatMapPanel.randomizeHeatMap();
-        });
-        randomizeButton.setFocusPainted(false);
-        JButton countButton = new JButton("Count");
-        countButton.addActionListener(_ -> heatMapPanel.countHeatMap());
-        countButton.setFocusPainted(false);
-        JButton countNeighboursButton = new JButton("Count by neighbours");
+        JPanel buttonPanel = new Templates.FlowStackPanel();
+        JButton randomizeButton, countButton, countNeighboursButton;
+
+        buttonPanel.add(randomizeButton = new Templates.ButtonT1("Randomize"));
+        randomizeButton.addActionListener(_ -> heatMapPanel.randomizeHeatMap());
+
+        buttonPanel.add(countButton = new Templates.ButtonT1("Count by Avg."));
+        countButton.addActionListener(_ -> heatMapPanel.countHeatMapByAverage());
+
+        buttonPanel.add(countNeighboursButton = new Templates.ButtonT1("Count by Nbr."));
         countNeighboursButton.addActionListener(_ -> heatMapPanel.countHeatMapByNeighbors());
-        countNeighboursButton.setFocusPainted(false);
-
-        // fixed size
-        Dimension buttonSize = new Dimension(180, 70);
-        randomizeButton.setPreferredSize(buttonSize);
-        countButton.setPreferredSize(buttonSize);
-        countNeighboursButton.setPreferredSize(buttonSize);
-
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        buttonPanel.add(randomizeButton);
-        buttonPanel.add(countButton);
-        buttonPanel.add(countNeighboursButton);
 
         // --- Slider row ---
-        JPanel sliderPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JPanel sliderPanel = new Templates.FlowStackPanel();
         JLabel sliderValueLabel = new JLabel("Threshold value: " + heatMapPanel.activeThreshold);
         JSlider thresholdSlider = new JSlider(1, heatMapPanel.diversity - 1, heatMapPanel.activeThreshold);
         thresholdSlider.addChangeListener(_ -> {
@@ -44,7 +29,7 @@ public class SettingsWindow extends JFrame {
         sliderPanel.add(thresholdSlider);
 
         // --- Check row ---
-        JPanel checkPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JPanel checkPanel = new Templates.FlowStackPanel();
         JCheckBox drawOutLineCheckBox = new JCheckBox();
         drawOutLineCheckBox.setSelected(heatMapPanel.drawOutLine);
         drawOutLineCheckBox.addActionListener(_ -> {
@@ -55,21 +40,19 @@ public class SettingsWindow extends JFrame {
         checkPanel.add(drawOutLineCheckBox);
 
         // --- window Buttons row ---
-        JPanel windowButtonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JPanel windowButtonPanel = new Templates.FlowStackPanel();
+        JButton logWindowButton, patternWindowButton, advancedSettingsButton;
 
-        JButton logWindowButton = new JButton("View Logs");
-        logWindowButton.addActionListener(_ -> LogWindow.showWindow());
-        logWindowButton.setPreferredSize(buttonSize);
-        logWindowButton.setFocusPainted(false);
+        windowButtonPanel.add(advancedSettingsButton = new Templates.ButtonT1("Adv Settings"));
+        advancedSettingsButton.addActionListener(_ -> new AdvancedSettingsWindow(heatMapPanel));
 
-        JButton patternWindowButton = new JButton("Patterns");
+        windowButtonPanel.add(patternWindowButton = new Templates.ButtonT1("Patterns"));
         patternWindowButton.addActionListener(_ -> new PatternWindow(heatMapPanel));
-        patternWindowButton.setPreferredSize(buttonSize);
-        patternWindowButton.setFocusPainted(false);
 
-        windowButtonPanel.add(logWindowButton);
-        windowButtonPanel.add(patternWindowButton);
+        windowButtonPanel.add(logWindowButton = new Templates.ButtonT1("View Logs"));
+        logWindowButton.addActionListener(_ -> LogWindow.showWindow());
 
+        // adds up all of the above panels
         mainPanel.add(buttonPanel);
         mainPanel.add(sliderPanel);
         mainPanel.add(checkPanel);
@@ -82,5 +65,7 @@ public class SettingsWindow extends JFrame {
         this.setLocationRelativeTo(null);
         this.setResizable(false);
         this.setVisible(true);
+
+        this.setAlwaysOnTop(true);
     }
 }

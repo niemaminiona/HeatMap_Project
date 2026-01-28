@@ -5,20 +5,17 @@ public class HeatMapWindow extends JFrame {
     public HeatMapWindow(){
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        this.add(new HeatMapGraphicPanel(50, 5));
+        this.add(new HeatMapGraphicPanel(200, 5));
 
         this.pack();
         this.setLocationRelativeTo(null);
         this.setVisible(true);
         this.setResizable(false);
-        this.setTitle("Heat distribution");
-
-
+        this.setTitle("Heat map");
     }
 }
 
 class HeatMapGraphicPanel extends JPanel{
-
     /// variables ///
     public int mapSize;
     public int plotSize;
@@ -43,7 +40,7 @@ class HeatMapGraphicPanel extends JPanel{
         mainHeatCellsMap = returnRandomHeatMap(mapSize);
 
         countHeatMapByNeighbors(2);
-        countHeatMap(4);
+        countHeatMapByAverage(4);
 
         this.setPreferredSize(new Dimension(mapSize * plotSize, mapSize * plotSize));
 
@@ -98,7 +95,7 @@ class HeatMapGraphicPanel extends JPanel{
 
 
     // method that returns averaged map
-    private HeatCell[][] returnCountedValues(HeatCell[][] heatMap) {
+    private HeatCell[][] returnCountedByAverage(HeatCell[][] heatMap) {
         int size = heatMap.length;
         HeatCell[][] updatedHeatMap = new HeatCell[size][size];
 
@@ -126,17 +123,17 @@ class HeatMapGraphicPanel extends JPanel{
                 updatedHeatMap[y][x] = new HeatCell(count / neighbours.length);
             }
         }
-        LogWindow.addLog("Counted (" + activeThreshold + ")");
+        LogWindow.addLog("Counted by average (" + activeThreshold + ")");
         return updatedHeatMap;
     }
 
     //function that randomizes mainHeatMap
-    public void countHeatMap(){
-        countHeatMap(1);
+    public void countHeatMapByAverage(){
+        countHeatMapByAverage(1);
     }
-    public void countHeatMap(int amount) {
+    public void countHeatMapByAverage(int amount) {
         for(int i = 0; i < amount; i++){
-            mainHeatCellsMap = returnCountedValues(mainHeatCellsMap);
+            mainHeatCellsMap = returnCountedByAverage(mainHeatCellsMap);
         }
         repaint();
     }
@@ -171,7 +168,7 @@ class HeatMapGraphicPanel extends JPanel{
                 updatedHeatMap[y][x] = new HeatCell(Math.round(count));
             }
         }
-        LogWindow.addLog("Counted neighbors (" + activeThreshold + ")");
+        LogWindow.addLog("Counted by neighbors (" + activeThreshold + ")");
 
         return updatedHeatMap;
     }
@@ -203,6 +200,14 @@ class HeatMapGraphicPanel extends JPanel{
         }
     }
 
+    public void adjustWindowSize(){
+        this.setPreferredSize(new Dimension(mapSize * plotSize, mapSize * plotSize));
+        Window mainWindow = SwingUtilities.getWindowAncestor(this); // this code finds ancestor window
+        if (mainWindow != null) {
+            mainWindow.pack();
+        }
+    }
+
 }
 /// Additional classes ///
 //class for data of single cell
@@ -213,9 +218,3 @@ class HeatCell {
         this.value = value;
     }
 }
-
-
-// class of window for settings
-
-
-

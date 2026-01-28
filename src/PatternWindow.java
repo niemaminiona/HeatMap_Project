@@ -7,7 +7,7 @@ public class PatternWindow extends JFrame {
     public PatternWindow(HeatMapGraphicPanel heatMapPanel){
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
-        JButton[] buttons = new JButton[]{new JButton(), new JButton(),  new JButton(),  new JButton()};
+        JButton[] buttons = new JButton[]{new JButton(), new JButton(),  new JButton(),  new JButton(),  new JButton()};
 
         // Define patterns here
         buttons[0].addActionListener(_ ->{
@@ -16,7 +16,7 @@ public class PatternWindow extends JFrame {
 
             heatMapPanel.activeThreshold = 7;
             heatMapPanel.countHeatMapByNeighbors(2);
-            heatMapPanel.countHeatMap(4);
+            heatMapPanel.countHeatMapByAverage(4);
 
             heatMapPanel.activeThreshold = temp;
         });
@@ -28,7 +28,7 @@ public class PatternWindow extends JFrame {
             heatMapPanel.activeThreshold = 7;
             heatMapPanel.countHeatMapByNeighbors(2);
             heatMapPanel.activeThreshold = 9;
-            heatMapPanel.countHeatMap(3);
+            heatMapPanel.countHeatMapByAverage(3);
 
             heatMapPanel.activeThreshold = temp;
         });
@@ -38,9 +38,9 @@ public class PatternWindow extends JFrame {
             heatMapPanel.randomizeHeatMap();
 
             heatMapPanel.activeThreshold = 4;
-            heatMapPanel.countHeatMap(2);
+            heatMapPanel.countHeatMapByAverage(2);
             heatMapPanel.activeThreshold = 6;
-            heatMapPanel.countHeatMap();
+            heatMapPanel.countHeatMapByAverage();
             heatMapPanel.countHeatMapByNeighbors(3);
 
             heatMapPanel.activeThreshold = temp;
@@ -51,17 +51,33 @@ public class PatternWindow extends JFrame {
             heatMapPanel.randomizeHeatMap();
 
             heatMapPanel.activeThreshold = 4;
-            heatMapPanel.countHeatMap(2);
+            heatMapPanel.countHeatMapByAverage(2);
             heatMapPanel.activeThreshold = 6;
-            heatMapPanel.countHeatMap(2);
+            heatMapPanel.countHeatMapByAverage(2);
             heatMapPanel.countHeatMapByNeighbors();
-            heatMapPanel.countHeatMap(4);
+            heatMapPanel.countHeatMapByAverage(4);
 
             heatMapPanel.activeThreshold = temp;
         });
 
+        buttons[4].addActionListener(_ ->{
+            int temp = heatMapPanel.activeThreshold;
+            heatMapPanel.randomizeHeatMap();
+
+            heatMapPanel.activeThreshold = 7;
+            for (int i = 0; i < 4; i++){
+                heatMapPanel.countHeatMapByAverage();
+                heatMapPanel.countHeatMapByNeighbors();
+            }
+            heatMapPanel.countHeatMapByNeighbors(2);
+
+            heatMapPanel.activeThreshold = temp;
+        });
+
+
         Dimension buttonSize = new Dimension(220, 70);
         Font buttonFont = new Font("SansSerif", Font.BOLD, 22);
+
         for (int i = 0; i < buttons.length; i++) {
             buttons[i].setText("Pattern " + (i + 1));
             buttons[i].setPreferredSize(buttonSize);
